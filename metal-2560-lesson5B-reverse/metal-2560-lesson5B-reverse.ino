@@ -174,8 +174,8 @@ void init_GPIO()
 }
 #include "WiFiEsp.h"
 #include "WiFiEspUDP.h"
-char ssid[] = "osoyoo_robot";
-
+char ssid[] = "*******"; // replace ****** with your network SSID (name)
+char pass[] = "*******"; // replace ****** with your network password
 int status = WL_IDLE_STATUS;
 // use a ring buffer to increase speed and reduce memory allocation
 char packetBuffer[5];
@@ -200,10 +200,13 @@ void setup()
     while (true);
   }
 
-  Serial.print("Attempting to start AP ");
-  Serial.println(ssid);
-  //AP mode
-  status = WiFi.beginAP(ssid, 10, "", 0);
+  // attempt to connect to WiFi network
+  while (status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to WPA SSID: ");
+    Serial.println(ssid);
+    // Connect to WPA/WPA2 network
+    status = WiFi.begin(ssid, pass);
+  }
 
   Serial.println("You're connected to the network");
   printWifiStatus();

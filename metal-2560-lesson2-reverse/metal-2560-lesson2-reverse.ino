@@ -109,7 +109,7 @@ void drive(int leftFront, int rightFront, int leftBack, int rightBack) {
   if (rightFront < 0) {
     FR_bck();
   } else {
-    FL_fwd();
+    FR_fwd();
   }
   
   if (leftBack < 0) {
@@ -232,34 +232,28 @@ void auto_avoidance() {
   Serial.println(String(obstacle_sign, BIN));
   if ( obstacle_sign == B100) {
     Serial.println("slight right");
-    set_Motorspeed(FAST_SPEED, SPEED, FAST_SPEED, SPEED);
-    go_Advance();
+    drive(FAST_SPEED, SPEED, FAST_SPEED, SPEED);
 
     delay(TURN_TIME);
-    //stop_Stop();
     return;
   }
   if ( obstacle_sign == B001  ) {
     Serial.println("slight left");
-    set_Motorspeed(SPEED, FAST_SPEED, SPEED, FAST_SPEED);
-    go_Advance();
+    drive(SPEED, FAST_SPEED, SPEED, FAST_SPEED);
 
     delay(TURN_TIME);
-    //stop_Stop();
     return;
   }
   if ( obstacle_sign == B110 ) {
     Serial.println("hard right");
-    go_Right();
-    set_Motorspeed(TURN_SPEED, TURN_SPEED, TURN_SPEED, TURN_SPEED);
+    drive(-TURN_SPEED, TURN_SPEED, -TURN_SPEED, TURN_SPEED);
     delay(TURN_TIME);
     stop_Stop();
     return;
   }
-  if (  obstacle_sign == B011 || obstacle_sign == B010) {
+  if ( obstacle_sign == B011 || obstacle_sign == B010) {
     Serial.println("hard left");
-    go_Left();//Turn left
-    set_Motorspeed(TURN_SPEED, TURN_SPEED, TURN_SPEED, TURN_SPEED);
+    drive(TURN_SPEED, -TURN_SPEED, TURN_SPEED, -TURN_SPEED);
     delay(TURN_TIME * 2 / 3);
     stop_Stop();
     return;
@@ -267,8 +261,7 @@ void auto_avoidance() {
 
   if (  obstacle_sign == B111) {
     Serial.println("hard back left");
-    go_Back();
-    set_Motorspeed(SPEED, FAST_SPEED, SPEED, FAST_SPEED);
+    drive(-SPEED, -FAST_SPEED, -SPEED, -FAST_SPEED);
     delay(BACK_TIME);
     stop_Stop();
     return;
@@ -276,10 +269,8 @@ void auto_avoidance() {
 
   if ( obstacle_sign == B000 || obstacle_sign == B101 ) {
     Serial.println("go ahead");
-    go_Advance();
-    set_Motorspeed(SPEED, SPEED, SPEED, SPEED);
+    drive(SPEED, SPEED, SPEED, SPEED);
     delay(FORWARD_TIME);
-    //stop_Stop();
     return;
   }
 }

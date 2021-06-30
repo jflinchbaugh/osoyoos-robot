@@ -163,11 +163,11 @@ int watch() {
   return round(echo_distance);
 }
 //Meassures distances to the left,center,right return a
-String watchsurrounding() {
+int watchsurrounding() {
   /*  obstacle_status is a binary integer, its last 3 digits stands for if there is any obstacles in left front,direct front and right front directions,
        3 digit string, for example 100 means front left front has obstacle, 011 means direct front and right front have obstacles
   */
-  int obstacle_status = B1000;
+  int obstacle_status = B000;
   head.write(140); //senfor facing left front direction
   delay(400);
   distance = watch();
@@ -176,7 +176,7 @@ String watchsurrounding() {
 
     obstacle_status  = obstacle_status | B100;
   }
-  head.write(90); //sehsor facing direct front
+  head.write(90); //sensor facing direct front
   delay(400);
   distance = watch();
   if (distance < OBSTACLE_LIMIT) {
@@ -194,54 +194,51 @@ String watchsurrounding() {
     obstacle_status  = obstacle_status | 1;
   }
 
-  String obstacle_str = String(obstacle_status, BIN);
-  obstacle_str = obstacle_str.substring(1, 4);
-
-  return obstacle_str; //return 5-character string standing for 5 direction obstacle status
+  return obstacle_status; //return 3-character string standing for 3 direction obstacle status
 }
 
 void auto_avoidance() {
-  String obstacle_sign = watchsurrounding(); // 5 digits of obstacle_sign binary value means the 5 direction obstacle status
+  int obstacle_sign = watchsurrounding(); // 5 digits of obstacle_sign binary value means the 5 direction obstacle status
   Serial.print("begin str=");
-  Serial.println(obstacle_sign);
-  if ( obstacle_sign == "100") {
-    Serial.println("SLIT right");
+  Serial.println(String(obstacle_sign, BIN));
+  if ( obstacle_sign == B100) {
+    Serial.println("slight right");
     set_Motorspeed(FAST_SPEED, SPEED, FAST_SPEED, SPEED);
     go_Advance();
     delay(TURN_TIME);
     stop_Stop();
   }
-  if ( obstacle_sign == "001"  ) {
-    Serial.println("SLIT LEFT");
+  if ( obstacle_sign == B001  ) {
+    Serial.println("slight left");
     set_Motorspeed(SPEED, FAST_SPEED, SPEED, FAST_SPEED);
     go_Advance();
 
     delay(TURN_TIME);
     stop_Stop();
   }
-  if ( obstacle_sign == "110" ) {
-    Serial.println("hand right");
+  if ( obstacle_sign == B110 ) {
+    Serial.println("hard right");
     go_Right();
     set_Motorspeed(TURN_SPEED, TURN_SPEED, TURN_SPEED, TURN_SPEED);
     delay(TURN_TIME);
     stop_Stop();
   }
-  if (  obstacle_sign == "011" || obstacle_sign == "010") {
-    Serial.println("hand left");
+  if (  obstacle_sign == B011 || obstacle_sign == B010) {
+    Serial.println("hard left");
     go_Left();//Turn left
     set_Motorspeed(TURN_SPEED, TURN_SPEED, TURN_SPEED, TURN_SPEED);
     delay(TURN_TIME * 2 / 3);
     stop_Stop();
   }
 
-  if (  obstacle_sign == "111" || obstacle_sign == "101"  ) {
-    Serial.println("hand back left");
+  if (  obstacle_sign == B111 || obstacle_sign == B101) {
+    Serial.println("hard back left");
     go_Right();
     set_Motorspeed(SPEED, FAST_SPEED, SPEED, FAST_SPEED);
     delay(BACK_TIME);
     stop_Stop();
   }
-  if ( obstacle_sign == "000"  ) {
+  if ( obstacle_sign == B000  ) {
     Serial.println("go ahead");
     go_Advance();
     set_Motorspeed(SPEED, SPEED, SPEED, SPEED);

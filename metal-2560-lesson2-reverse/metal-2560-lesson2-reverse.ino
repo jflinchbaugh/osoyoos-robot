@@ -12,6 +12,7 @@
 
 */
 #include <Servo.h>
+
 #define speedPinR 9   //  RIGHT WHEEL PWM pin D45 connect front MODEL-X ENA 
 #define RightMotorDirPin1  22    //Front Right Motor direction pin 1 to Front MODEL-X IN1  (K1)
 #define RightMotorDirPin2  24   //Front Right Motor direction pin 2 to Front MODEL-X IN2   (K1)                                 
@@ -30,9 +31,9 @@
 #define Echo_PIN    31 // Ultrasonic Echo pin connect to A5
 #define Trig_PIN    30  // Ultrasonic Trig pin connect to A4
 
-#define FAST_SPEED  120   //both sides of the motor speed
+#define FAST_SPEED  255 // 120   //both sides of the motor speed
 #define SPEED  80     //both sides of the motor speed
-#define TURN_SPEED  110   //both sides of the motor speed
+#define TURN_SPEED  255 //110   //both sides of the motor speed
 #define FORWARD_TIME 200   //Forward distance
 #define BACK_TIME  500  // back distance
 #define TURN_TIME  500  //Time the robot spends turning (miliseconds)
@@ -206,7 +207,7 @@ void auto_avoidance() {
     delay(TURN_TIME);
     return;
   }
-  
+
   if (obstacle_sign == B001) {
     Serial.println("slight left");
     drive(SPEED, FAST_SPEED, SPEED, FAST_SPEED);
@@ -214,7 +215,7 @@ void auto_avoidance() {
     delay(TURN_TIME);
     return;
   }
-  
+
   if (obstacle_sign == B110) {
     Serial.println("hard right");
     drive(-TURN_SPEED, TURN_SPEED, -TURN_SPEED, TURN_SPEED);
@@ -222,7 +223,7 @@ void auto_avoidance() {
     stop_Stop();
     return;
   }
-  
+
   if (obstacle_sign == B011) {
     Serial.println("hard left");
     drive(TURN_SPEED, -TURN_SPEED, TURN_SPEED, -TURN_SPEED);
@@ -243,17 +244,28 @@ void auto_avoidance() {
       drive(TURN_SPEED, -TURN_SPEED, TURN_SPEED, -TURN_SPEED);
     } else {
       Serial.println("hard right");
-      drive(-TURN_SPEED, TURN_SPEED, -TURN_SPEED, TURN_SPEED);  
+      drive(-TURN_SPEED, TURN_SPEED, -TURN_SPEED, TURN_SPEED);
     }
-    
+
     delay(TURN_TIME * 2 / 3);
     stop_Stop();
     return;
   }
 
   if (obstacle_sign == B111) {
-    Serial.println("hard back left");
-    drive(-SPEED, -FAST_SPEED, -SPEED, -FAST_SPEED);
+    dead_turn ++;
+
+    if (dead_turn > 5) {
+      dead_turn = -5;
+    }
+
+    if (dead_turn < 0) {
+      Serial.println("hard back left");
+      drive(-SPEED, -FAST_SPEED, -SPEED, -FAST_SPEED);
+    } else {
+      Serial.println("hard back right");
+      drive(-FAST_SPEED, -SPEED, -FAST_SPEED, -SPEED);
+    }
     delay(BACK_TIME);
     stop_Stop();
     return;

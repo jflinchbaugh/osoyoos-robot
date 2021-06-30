@@ -38,42 +38,11 @@
 #define TURN_TIME  500  //Time the robot spends turning (miliseconds)
 #define OBSTACLE_LIMIT 45  //minimum distance in cm to obstacles at both sides (the car will allow a shorter distance sideways)
 int distance;
+int dead_turn = 0;
 
 Servo head;
 
 /*motor control*/
-void go_Advance()  //Forward
-{
-
-  FR_fwd();
-  FL_fwd();
-  RR_fwd();
-  RL_fwd();
-}
-
-void go_Left()  //Turn left
-{
-  FR_fwd();
-  FL_bck();
-  RR_fwd();
-  RL_bck();
-}
-
-void go_Right()  //Turn right
-{
-  FR_bck();
-  FL_fwd();
-  RR_bck();
-  RL_fwd();
-}
-
-void go_Back()  //Reverse
-{
-  FR_bck();
-  FL_bck();
-  RR_bck();
-  RL_bck();
-}
 
 void stop_Stop()    //Stop
 {
@@ -99,19 +68,19 @@ void set_Motorspeed(int leftFront, int rightFront, int leftBack, int rightBack)
 
 void drive(int leftFront, int rightFront, int leftBack, int rightBack) {
   set_Motorspeed(abs(leftFront), abs(rightFront), abs(leftBack), abs(rightBack));
-  
+
   if (leftFront < 0) {
     FL_bck();
   } else {
     FL_fwd();
   }
-  
+
   if (rightFront < 0) {
     FR_bck();
   } else {
     FR_fwd();
   }
-  
+
   if (leftBack < 0) {
     RL_bck();
   } else {
@@ -189,7 +158,7 @@ int watch() {
   return round(echo_distance);
 }
 
-//Meassures distances to the left,center,right return a
+//Measures distances to the left,center,right return a
 int watchsurrounding() {
   /*  obstacle_status is a binary integer, its last 3 digits stands for if there is any obstacles in left front,direct front and right front directions,
        3 digit string, for example 100 means front left front has obstacle, 011 means direct front and right front have obstacles
@@ -223,11 +192,11 @@ int watchsurrounding() {
     obstacle_status  = obstacle_status | B001;
   }
 
-  return obstacle_status; //return 3-character string standing for 3 direction obstacle status
+  return obstacle_status;
 }
 
 void auto_avoidance() {
-  int obstacle_sign = watchsurrounding(); // 5 digits of obstacle_sign binary value means the 5 direction obstacle status
+  int obstacle_sign = watchsurrounding(); // 3 bits of obstacle_sign binary value means the 3 direction obstacle status
   Serial.print("begin str=");
   Serial.println(String(obstacle_sign, BIN));
   if ( obstacle_sign == B100) {
@@ -237,21 +206,24 @@ void auto_avoidance() {
     delay(TURN_TIME);
     return;
   }
-  if ( obstacle_sign == B001  ) {
+  
+  if (obstacle_sign == B001) {
     Serial.println("slight left");
     drive(SPEED, FAST_SPEED, SPEED, FAST_SPEED);
 
     delay(TURN_TIME);
     return;
   }
-  if ( obstacle_sign == B110 ) {
+  
+  if (obstacle_sign == B110) {
     Serial.println("hard right");
     drive(-TURN_SPEED, TURN_SPEED, -TURN_SPEED, TURN_SPEED);
     delay(TURN_TIME);
     stop_Stop();
     return;
   }
-  if ( obstacle_sign == B011 || obstacle_sign == B010) {
+  
+  if (obstacle_sign == B011) {
     Serial.println("hard left");
     drive(TURN_SPEED, -TURN_SPEED, TURN_SPEED, -TURN_SPEED);
     delay(TURN_TIME * 2 / 3);
@@ -259,7 +231,27 @@ void auto_avoidance() {
     return;
   }
 
-  if (  obstacle_sign == B111) {
+  if (obstacle_sign == B010) {
+    dead_turn ++;
+
+    if (dead_turn > 5) {
+      dead_turn = -5;
+    }
+
+    if (dead_turn < 0) {
+      Serial.println("hard left");
+      drive(TURN_SPEED, -TURN_SPEED, TURN_SPEED, -TURN_SPEED);
+    } else {
+      Serial.println("hard right");
+      drive(-TURN_SPEED, TURN_SPEED, -TURN_SPEED, TURN_SPEED);  
+    }
+    
+    delay(TURN_TIME * 2 / 3);
+    stop_Stop();
+    return;
+  }
+
+  if (obstacle_sign == B111) {
     Serial.println("hard back left");
     drive(-SPEED, -FAST_SPEED, -SPEED, -FAST_SPEED);
     delay(BACK_TIME);

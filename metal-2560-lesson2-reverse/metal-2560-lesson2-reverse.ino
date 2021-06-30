@@ -30,16 +30,17 @@
 #define Echo_PIN    31 // Ultrasonic Echo pin connect to A5
 #define Trig_PIN    30  // Ultrasonic Trig pin connect to A4
 
-#define FAST_SPEED  110   //both sides of the motor speed
+#define FAST_SPEED  120   //both sides of the motor speed
 #define SPEED  80     //both sides of the motor speed
 #define TURN_SPEED  110   //both sides of the motor speed
 #define FORWARD_TIME 200   //Forward distance
-#define BACK_TIME  300  // back distance
-#define TURN_TIME  250  //Time the robot spends turning (miliseconds)
-#define OBSTACLE_LIMIT 30  //minimum distance in cm to obstacles at both sides (the car will allow a shorter distance sideways)
+#define BACK_TIME  500  // back distance
+#define TURN_TIME  500  //Time the robot spends turning (miliseconds)
+#define OBSTACLE_LIMIT 45  //minimum distance in cm to obstacles at both sides (the car will allow a shorter distance sideways)
 int distance;
 
 Servo head;
+
 /*motor control*/
 void go_Advance()  //Forward
 {
@@ -49,6 +50,7 @@ void go_Advance()  //Forward
   RR_fwd();
   RL_fwd();
 }
+
 void go_Left()  //Turn left
 {
   FR_fwd();
@@ -56,6 +58,7 @@ void go_Left()  //Turn left
   RR_fwd();
   RL_bck();
 }
+
 void go_Right()  //Turn right
 {
   FR_bck();
@@ -63,16 +66,14 @@ void go_Right()  //Turn right
   RR_bck();
   RL_fwd();
 }
+
 void go_Back()  //Reverse
 {
-
   FR_bck();
   FL_bck();
   RR_bck();
   RL_bck();
 }
-
-
 
 void stop_Stop()    //Stop
 {
@@ -94,60 +95,55 @@ void set_Motorspeed(int leftFront, int rightFront, int leftBack, int rightBack)
   analogWrite(speedPinR, rightFront);
   analogWrite(speedPinLB, leftBack);
   analogWrite(speedPinRB, rightBack);
-
 }
 
 void FR_fwd()  //front-right wheel forward turn
 {
   digitalWrite(RightMotorDirPin1, LOW);
   digitalWrite(RightMotorDirPin2, HIGH);
-
 }
+
 void FR_bck() // front-right wheel backward turn
 {
   digitalWrite(RightMotorDirPin1, HIGH);
   digitalWrite(RightMotorDirPin2, LOW);
-
 }
+
 void FL_fwd() // front-left wheel forward turn
 {
   digitalWrite(LeftMotorDirPin1, LOW);
   digitalWrite(LeftMotorDirPin2, HIGH);
-
 }
+
 void FL_bck() // front-left wheel backward turn
 {
   digitalWrite(LeftMotorDirPin1, HIGH);
   digitalWrite(LeftMotorDirPin2, LOW);
-
 }
 
 void RR_fwd()  //rear-right wheel forward turn
 {
   digitalWrite(RightMotorDirPin1B, LOW);
   digitalWrite(RightMotorDirPin2B, HIGH);
-
 }
+
 void RR_bck()  //rear-right wheel backward turn
 {
   digitalWrite(RightMotorDirPin1B, HIGH);
   digitalWrite(RightMotorDirPin2B, LOW);
-
 }
+
 void RL_fwd()  //rear-left wheel forward turn
 {
   digitalWrite(LeftMotorDirPin1B, LOW);
   digitalWrite(LeftMotorDirPin2B, HIGH);
-
 }
+
 void RL_bck()    //rear-left wheel backward turn
 {
   digitalWrite(LeftMotorDirPin1B, HIGH);
   digitalWrite(LeftMotorDirPin2B, LOW);
-
 }
-
-
 
 /*detection of ultrasonic distance*/
 int watch() {
@@ -162,36 +158,39 @@ int watch() {
   //Serial.println((int)echo_distance);
   return round(echo_distance);
 }
+
 //Meassures distances to the left,center,right return a
 int watchsurrounding() {
   /*  obstacle_status is a binary integer, its last 3 digits stands for if there is any obstacles in left front,direct front and right front directions,
        3 digit string, for example 100 means front left front has obstacle, 011 means direct front and right front have obstacles
   */
   int obstacle_status = B000;
-  head.write(140); //senfor facing left front direction
+  
+  head.write(150); //sensor facing left front direction
   delay(400);
   distance = watch();
   if (distance < OBSTACLE_LIMIT) {
-    stop_Stop();
+    //stop_Stop();
 
     obstacle_status  = obstacle_status | B100;
   }
+  
   head.write(90); //sensor facing direct front
   delay(400);
   distance = watch();
   if (distance < OBSTACLE_LIMIT) {
     stop_Stop();
 
-    obstacle_status  = obstacle_status | B10;
+    obstacle_status  = obstacle_status | B010;
   }
 
-  head.write(40); //sensor faces to right front 20 degree direction
+  head.write(30); //sensor faces to right front 20 degree direction
   delay(400);
   distance = watch();
   if (distance < OBSTACLE_LIMIT) {
-    stop_Stop();
+    //stop_Stop();
 
-    obstacle_status  = obstacle_status | 1;
+    obstacle_status  = obstacle_status | B001;
   }
 
   return obstacle_status; //return 3-character string standing for 3 direction obstacle status
@@ -206,7 +205,7 @@ void auto_avoidance() {
     set_Motorspeed(FAST_SPEED, SPEED, FAST_SPEED, SPEED);
     go_Advance();
     delay(TURN_TIME);
-    stop_Stop();
+    //stop_Stop();
   }
   if ( obstacle_sign == B001  ) {
     Serial.println("slight left");
@@ -214,7 +213,7 @@ void auto_avoidance() {
     go_Advance();
 
     delay(TURN_TIME);
-    stop_Stop();
+    //stop_Stop();
   }
   if ( obstacle_sign == B110 ) {
     Serial.println("hard right");
@@ -231,19 +230,20 @@ void auto_avoidance() {
     stop_Stop();
   }
 
-  if (  obstacle_sign == B111 || obstacle_sign == B101) {
+  if (  obstacle_sign == B111) {
     Serial.println("hard back left");
-    go_Right();
+    go_Back();
     set_Motorspeed(SPEED, FAST_SPEED, SPEED, FAST_SPEED);
     delay(BACK_TIME);
     stop_Stop();
   }
-  if ( obstacle_sign == B000  ) {
+    
+  if ( obstacle_sign == B000 || obstacle_sign == B101 ) {
     Serial.println("go ahead");
     go_Advance();
     set_Motorspeed(SPEED, SPEED, SPEED, SPEED);
     delay(FORWARD_TIME);
-    stop_Stop();
+    //stop_Stop();
   }
 }
 

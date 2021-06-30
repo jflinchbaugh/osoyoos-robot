@@ -97,52 +97,82 @@ void set_Motorspeed(int leftFront, int rightFront, int leftBack, int rightBack)
   analogWrite(speedPinRB, rightBack);
 }
 
+void drive(int leftFront, int rightFront, int leftBack, int rightBack) {
+  set_Motorspeed(abs(leftFront), abs(rightFront), abs(leftBack), abs(rightBack));
+  
+  if (leftFront < 0) {
+    FL_bck();
+  } else {
+    FL_fwd();
+  }
+  
+  if (rightFront < 0) {
+    FR_bck();
+  } else {
+    FL_fwd();
+  }
+  
+  if (leftBack < 0) {
+    RL_bck();
+  } else {
+    RL_fwd();
+  }
+
+  if (rightBack < 0) {
+    RR_bck();
+  } else {
+    RR_fwd();
+  }
+}
+
+void fwd(int pin1, int pin2) {
+  digitalWrite(pin1, LOW);
+  digitalWrite(pin2, HIGH);
+}
+
+void back(int pin1, int pin2) {
+  digitalWrite(pin1, HIGH);
+  digitalWrite(pin2, LOW);
+}
+
 void FR_fwd()  //front-right wheel forward turn
 {
-  digitalWrite(RightMotorDirPin1, LOW);
-  digitalWrite(RightMotorDirPin2, HIGH);
+  fwd(RightMotorDirPin1, RightMotorDirPin2);
 }
 
 void FR_bck() // front-right wheel backward turn
 {
-  digitalWrite(RightMotorDirPin1, HIGH);
-  digitalWrite(RightMotorDirPin2, LOW);
+  back(RightMotorDirPin1, RightMotorDirPin2);
 }
 
 void FL_fwd() // front-left wheel forward turn
 {
-  digitalWrite(LeftMotorDirPin1, LOW);
-  digitalWrite(LeftMotorDirPin2, HIGH);
+  fwd(LeftMotorDirPin1, LeftMotorDirPin2);
 }
 
 void FL_bck() // front-left wheel backward turn
 {
-  digitalWrite(LeftMotorDirPin1, HIGH);
-  digitalWrite(LeftMotorDirPin2, LOW);
+  back(LeftMotorDirPin1, LeftMotorDirPin2);
 }
 
 void RR_fwd()  //rear-right wheel forward turn
 {
-  digitalWrite(RightMotorDirPin1B, LOW);
-  digitalWrite(RightMotorDirPin2B, HIGH);
+  fwd(RightMotorDirPin1B, RightMotorDirPin2B);
 }
 
 void RR_bck()  //rear-right wheel backward turn
 {
-  digitalWrite(RightMotorDirPin1B, HIGH);
-  digitalWrite(RightMotorDirPin2B, LOW);
+  back(RightMotorDirPin1B, RightMotorDirPin2B);
 }
 
 void RL_fwd()  //rear-left wheel forward turn
 {
-  digitalWrite(LeftMotorDirPin1B, LOW);
-  digitalWrite(LeftMotorDirPin2B, HIGH);
+  fwd(LeftMotorDirPin1B, LeftMotorDirPin2B);
 }
 
 void RL_bck()    //rear-left wheel backward turn
 {
-  digitalWrite(LeftMotorDirPin1B, HIGH);
-  digitalWrite(LeftMotorDirPin2B, LOW);
+  back(LeftMotorDirPin1B, LeftMotorDirPin2B);
 }
 
 /*detection of ultrasonic distance*/
@@ -165,7 +195,7 @@ int watchsurrounding() {
        3 digit string, for example 100 means front left front has obstacle, 011 means direct front and right front have obstacles
   */
   int obstacle_status = B000;
-  
+
   head.write(150); //sensor facing left front direction
   delay(400);
   distance = watch();
@@ -174,7 +204,7 @@ int watchsurrounding() {
 
     obstacle_status  = obstacle_status | B100;
   }
-  
+
   head.write(90); //sensor facing direct front
   delay(400);
   distance = watch();
@@ -204,8 +234,10 @@ void auto_avoidance() {
     Serial.println("slight right");
     set_Motorspeed(FAST_SPEED, SPEED, FAST_SPEED, SPEED);
     go_Advance();
+
     delay(TURN_TIME);
     //stop_Stop();
+    return;
   }
   if ( obstacle_sign == B001  ) {
     Serial.println("slight left");
@@ -214,6 +246,7 @@ void auto_avoidance() {
 
     delay(TURN_TIME);
     //stop_Stop();
+    return;
   }
   if ( obstacle_sign == B110 ) {
     Serial.println("hard right");
@@ -221,6 +254,7 @@ void auto_avoidance() {
     set_Motorspeed(TURN_SPEED, TURN_SPEED, TURN_SPEED, TURN_SPEED);
     delay(TURN_TIME);
     stop_Stop();
+    return;
   }
   if (  obstacle_sign == B011 || obstacle_sign == B010) {
     Serial.println("hard left");
@@ -228,6 +262,7 @@ void auto_avoidance() {
     set_Motorspeed(TURN_SPEED, TURN_SPEED, TURN_SPEED, TURN_SPEED);
     delay(TURN_TIME * 2 / 3);
     stop_Stop();
+    return;
   }
 
   if (  obstacle_sign == B111) {
@@ -236,14 +271,16 @@ void auto_avoidance() {
     set_Motorspeed(SPEED, FAST_SPEED, SPEED, FAST_SPEED);
     delay(BACK_TIME);
     stop_Stop();
+    return;
   }
-    
+
   if ( obstacle_sign == B000 || obstacle_sign == B101 ) {
     Serial.println("go ahead");
     go_Advance();
     set_Motorspeed(SPEED, SPEED, SPEED, SPEED);
     delay(FORWARD_TIME);
     //stop_Stop();
+    return;
   }
 }
 
@@ -277,8 +314,6 @@ void setup() {
   delay(2000);
 
   Serial.begin(9600);
-
-
 
   stop_Stop();//Stop
 

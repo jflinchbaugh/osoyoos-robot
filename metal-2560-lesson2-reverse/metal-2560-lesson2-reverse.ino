@@ -35,9 +35,11 @@
 #define SPEED  80     //both sides of the motor speed
 #define TURN_SPEED  255 //110   //both sides of the motor speed
 #define FORWARD_TIME 200   //Forward distance
-#define BACK_TIME  500  // back distance
-#define TURN_TIME  500  //Time the robot spends turning (miliseconds)
-#define OBSTACLE_LIMIT 45  //minimum distance in cm to obstacles at both sides (the car will allow a shorter distance sideways)
+#define BACK_TIME  300  // back distance
+#define TURN_TIME  250  //Time the robot spends turning (miliseconds)
+#define OBSTACLE_LIMIT 35  //minimum distance in cm to obstacles at both sides (the car will allow a shorter distance sideways)
+#define WATCH_DELAY 200 // delay when moving servo
+
 int distance;
 int dead_turn = 0;
 
@@ -167,7 +169,7 @@ int watchsurrounding() {
   int obstacle_status = B000;
 
   head.write(150); //sensor facing left front direction
-  delay(400);
+  delay(WATCH_DELAY);
   distance = watch();
   if (distance < OBSTACLE_LIMIT) {
     //stop_Stop();
@@ -176,7 +178,7 @@ int watchsurrounding() {
   }
 
   head.write(90); //sensor facing direct front
-  delay(400);
+  delay(WATCH_DELAY);
   distance = watch();
   if (distance < OBSTACLE_LIMIT) {
     stop_Stop();
@@ -185,13 +187,15 @@ int watchsurrounding() {
   }
 
   head.write(30); //sensor faces to right front 20 degree direction
-  delay(400);
+  delay(WATCH_DELAY);
   distance = watch();
   if (distance < OBSTACLE_LIMIT) {
     //stop_Stop();
 
     obstacle_status  = obstacle_status | B001;
   }
+
+  head.write(90); // face forward while moving
 
   return obstacle_status;
 }
@@ -260,11 +264,11 @@ void auto_avoidance() {
     }
 
     if (dead_turn < 0) {
-      Serial.println("hard back left");
-      drive(-SPEED, -FAST_SPEED, -SPEED, -FAST_SPEED);
-    } else {
       Serial.println("hard back right");
       drive(-FAST_SPEED, -SPEED, -FAST_SPEED, -SPEED);
+    } else {
+      Serial.println("hard back left");
+      drive(-SPEED, -FAST_SPEED, -SPEED, -FAST_SPEED);
     }
     delay(BACK_TIME);
     stop_Stop();

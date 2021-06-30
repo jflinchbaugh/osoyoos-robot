@@ -168,7 +168,7 @@ String watchsurrounding() {
        3 digit string, for example 100 means front left front has obstacle, 011 means direct front and right front have obstacles
   */
   int obstacle_status = B1000;
-  head.write(160); //senfor facing left front direction
+  head.write(140); //senfor facing left front direction
   delay(400);
   distance = watch();
   if (distance < OBSTACLE_LIMIT) {
@@ -185,7 +185,7 @@ String watchsurrounding() {
     obstacle_status  = obstacle_status | B10;
   }
 
-  head.write(20); //sensor faces to right front 20 degree direction
+  head.write(40); //sensor faces to right front 20 degree direction
   delay(400);
   distance = watch();
   if (distance < OBSTACLE_LIMIT) {

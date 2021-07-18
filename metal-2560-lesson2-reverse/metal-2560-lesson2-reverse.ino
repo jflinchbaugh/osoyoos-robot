@@ -168,12 +168,10 @@ int watchsurrounding() {
   */
   int obstacle_status = B000;
 
-  head.write(150); //sensor facing left front direction
+  head.write(150); //sensor facing left front
   delay(WATCH_DELAY);
   distance = watch();
   if (distance < OBSTACLE_LIMIT) {
-    //stop_Stop();
-
     obstacle_status  = obstacle_status | B100;
   }
 
@@ -181,17 +179,13 @@ int watchsurrounding() {
   delay(WATCH_DELAY);
   distance = watch();
   if (distance < OBSTACLE_LIMIT) {
-    stop_Stop();
-
     obstacle_status  = obstacle_status | B010;
   }
 
-  head.write(30); //sensor faces to right front 20 degree direction
+  head.write(30); //sensor faces to right front
   delay(WATCH_DELAY);
   distance = watch();
   if (distance < OBSTACLE_LIMIT) {
-    //stop_Stop();
-
     obstacle_status  = obstacle_status | B001;
   }
 
@@ -207,7 +201,6 @@ void auto_avoidance() {
   if ( obstacle_sign == B100) {
     Serial.println("slight right");
     drive(FAST_SPEED, SPEED, FAST_SPEED, SPEED);
-
     delay(TURN_TIME);
     return;
   }
@@ -215,7 +208,6 @@ void auto_avoidance() {
   if (obstacle_sign == B001) {
     Serial.println("slight left");
     drive(SPEED, FAST_SPEED, SPEED, FAST_SPEED);
-
     delay(TURN_TIME);
     return;
   }
@@ -320,6 +312,4 @@ void setup() {
 
 void loop() {
   auto_avoidance();
-  // Serial.println( watch());
-  //delay(2000);
 }

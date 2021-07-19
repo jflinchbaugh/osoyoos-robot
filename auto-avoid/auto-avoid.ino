@@ -38,10 +38,13 @@
 #define BACK_TIME  300  // back distance
 #define TURN_TIME  250  //Time the robot spends turning (miliseconds)
 #define OBSTACLE_LIMIT 25  //minimum distance in cm to obstacles at both sides (the car will allow a shorter distance sideways)
-#define WATCH_DELAY 300 // delay when moving servo
+#define WATCH_DELAY 150 // delay when moving servo
+#define LEFT_RIGHT 1
+#define RIGHT_LEFT -1
 
 int distance;
 int dead_turn = 0;
+int scanDir = LEFT_RIGHT;
 
 Servo head;
 
@@ -162,7 +165,7 @@ int watch() {
 }
 
 //Measures distances to the left,center,right return a
-int watchsurrounding() {
+int watchLeftRight() {
   /*  obstacle_status is a binary integer, its last 3 digits stands for if there is any obstacles in left front,direct front and right front directions,
        3 digit string, for example 100 means front left front has obstacle, 011 means direct front and right front have obstacles
   */
@@ -189,13 +192,53 @@ int watchsurrounding() {
     obstacle_status  = obstacle_status | B001;
   }
 
-  head.write(90); // face forward while moving
+  return obstacle_status;
+}
+
+//Measures distances to the left,center,right return a
+int watchRightLeft() {
+  /*  obstacle_status is a binary integer, its last 3 digits stands for if there is any obstacles in left front,direct front and right front directions,
+       3 digit string, for example 100 means front left front has obstacle, 011 means direct front and right front have obstacles
+  */
+  int obstacle_status = B000;
+
+  head.write(30); //sensor faces to right front
+  delay(WATCH_DELAY);
+  distance = watch();
+  if (distance < OBSTACLE_LIMIT) {
+    obstacle_status  = obstacle_status | B001;
+  }
+
+  head.write(90); //sensor facing direct front
+  delay(WATCH_DELAY);
+  distance = watch();
+  if (distance < OBSTACLE_LIMIT) {
+    obstacle_status  = obstacle_status | B010;
+  }
+
+  head.write(150); //sensor facing left front
+  delay(WATCH_DELAY);
+  distance = watch();
+  if (distance < OBSTACLE_LIMIT) {
+    obstacle_status  = obstacle_status | B100;
+  }
 
   return obstacle_status;
 }
 
+int watchSurround() {
+  if (scanDir == LEFT_RIGHT) {
+    scanDir = RIGHT_LEFT;
+    return watchLeftRight();
+  }
+
+  scanDir = LEFT_RIGHT;
+  return watchRightLeft();
+}
+
+
 void auto_avoidance() {
-  int obstacle_sign = watchsurrounding(); // 3 bits of obstacle_sign binary value means the 3 direction obstacle status
+  int obstacle_sign = watchSurround(); // 3 bits of obstacle_sign binary value means the 3 direction obstacle status
   Serial.print("begin str=");
   Serial.println(String(obstacle_sign, BIN));
   if ( obstacle_sign == B100) {

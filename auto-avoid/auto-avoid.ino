@@ -31,20 +31,20 @@
 #define Echo_PIN    31 // Ultrasonic Echo pin connect to A5
 #define Trig_PIN    30  // Ultrasonic Trig pin connect to A4
 
-#define FAST_SPEED  120 // 120   //both sides of the motor speed
-#define SPEED  60     //both sides of the motor speed
+#define FAST_SPEED  180 // 120   //both sides of the motor speed
+#define SPEED  80     //both sides of the motor speed
 #define TURN_SPEED  120 //110   //both sides of the motor speed
-#define FORWARD_TIME 200   //Forward distance
-#define BACK_TIME  300  // back distance
-#define TURN_TIME  250  //Time the robot spends turning (miliseconds)
-#define OBSTACLE_LIMIT 25  //minimum distance in cm to obstacles at both sides (the car will allow a shorter distance sideways)
+#define OBSTACLE_LIMIT 30  //minimum distance in cm to obstacles at both sides (the car will allow a shorter distance sideways)
 #define WATCH_DELAY 150 // delay when moving servo
 #define LEFT_RIGHT 1
 #define RIGHT_LEFT -1
+#define HARD_LEFT B001
+#define HARD_RIGHT B100
 
 int distance;
 int dead_turn = 0;
 int scanDir = LEFT_RIGHT;
+int hardTurn = B000;
 
 Servo head;
 
@@ -226,7 +226,27 @@ int watchRightLeft() {
   return obstacle_status;
 }
 
+//Measures distances to the left,center,right return a
+int watchAhead() {
+  int obstacle_status = hardTurn;
+
+  head.write(90); //sensor facing direct front
+  delay(WATCH_DELAY);
+  distance = watch();
+  if (distance < OBSTACLE_LIMIT) {
+    obstacle_status  = obstacle_status | B010;
+  } else {
+    obstacle_status = B000;
+  }
+
+  return obstacle_status;
+}
+
 int watchSurround() {
+  if (hardTurn != 0) {
+    return watchAhead();
+  }
+  
   if (scanDir == LEFT_RIGHT) {
     scanDir = RIGHT_LEFT;
     return watchLeftRight();
@@ -256,12 +276,14 @@ void auto_avoidance() {
   if (obstacle_sign == B110) {
     Serial.println("hard right");
     drive(-TURN_SPEED, TURN_SPEED, -TURN_SPEED, TURN_SPEED);
+    hardTurn = HARD_RIGHT;
     return;
   }
 
   if (obstacle_sign == B011) {
     Serial.println("hard left");
     drive(TURN_SPEED, -TURN_SPEED, TURN_SPEED, -TURN_SPEED);
+    hardTurn = HARD_LEFT;
     return;
   }
 
@@ -275,9 +297,11 @@ void auto_avoidance() {
     if (dead_turn < 0) {
       Serial.println("hard left");
       drive(TURN_SPEED, -TURN_SPEED, TURN_SPEED, -TURN_SPEED);
+      hardTurn = HARD_LEFT;
     } else {
       Serial.println("hard right");
       drive(-TURN_SPEED, TURN_SPEED, -TURN_SPEED, TURN_SPEED);
+      hardTurn = HARD_RIGHT;
     }
     return;
   }
@@ -302,6 +326,7 @@ void auto_avoidance() {
   if ( obstacle_sign == B000 || obstacle_sign == B101 ) {
     Serial.println("go ahead");
     drive(SPEED, SPEED, SPEED, SPEED);
+    hardTurn = B000;
     return;
   }
 }
